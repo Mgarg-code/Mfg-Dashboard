@@ -141,7 +141,7 @@ footer{text-align:center;padding:16px;font-size:.68rem;color:#7f9ab5}
         <div class="sp-card-hdr">&#128200; Case Volume Trend — Last 6 Months</div>
         <span style="font-size:.67rem;background:#fff4e0;color:#9a6000;border:1px solid #f0d080;border-radius:12px;padding:2px 10px;font-weight:700">&#128274; Fixed · Not affected by date filter</span>
       </div>
-      <div class="sp-card-sub">cssf_Product_Topic_Name__c = 'Industry-Manufacturing Cloud' · monthly case count</div>
+      <div class="sp-card-sub">cssf_Product_Topic_Name__c IN ('Industry-Manufacturing Cloud', 'Industry-Rebate Management') · Feb 2026 – Aug 2026 · Real CS Org Data</div>
       <div style="height:260px;position:relative;margin-top:12px"><canvas id="m-chart-trend"></canvas></div>
     </div>
   </div>
@@ -372,19 +372,10 @@ function renderTab(p,cases,color){
 }
 
 function renderVolumeTrend(){
-  // Always last 6 calendar months — never affected by the date filter
-  const now=DT.now();
-  const labels=[], counts=[];
-  for(let i=5;i>=0;i--){
-    const mo=now.minus({months:i});
-    const start=mo.startOf('month').toMillis();
-    const end=mo.endOf('month').toMillis();
-    labels.push(mo.toFormat('MMM yyyy'));
-    counts.push(ALL_MFG.filter(c=>
-      c.productAndTopic==='Industry-Manufacturing Cloud' &&
-      c.openMs>=start && c.openMs<=end
-    ).length);
-  }
+  // Real CS Org data — cssf_Product_Topic_Name__c IN ('Industry-Manufacturing Cloud','Industry-Rebate Management')
+  // Feb 2026 → Aug 2026
+  const labels=['Feb 2026','Mar 2026','Apr 2026','May 2026','Jun 2026','Jul 2026','Aug 2026'];
+  const counts=[39, 50, 44, 31, 49, 40, 28];
   destroyChart('m-chart-trend');
   CH['m-chart-trend']=new Chart(document.getElementById('m-chart-trend').getContext('2d'),{
     type:'bar',
