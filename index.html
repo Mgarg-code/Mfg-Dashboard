@@ -215,7 +215,7 @@ function generateData(){
   const now=luxon.DateTime.now();
   function mk(id,prod,accts,cats,feats,openMs){
     const status=STATUSES[Math.floor(rng()*STATUSES.length)];
-    return{id,product:prod,account:accts[Math.floor(rng()*accts.length)],
+    return{id,productAndTopic:prod,account:accts[Math.floor(rng()*accts.length)],
       openMs,status,
       severity:SEVS[Math.floor(rng()*SEVS.length)],
       successPlan:SPS[Math.floor(rng()*SPS.length)],
@@ -242,7 +242,7 @@ function getFiltered(dataset,productList){
   var result=[];
   for(var i=0;i<dataset.length;i++){
     var c=dataset[i];
-    if(productList.indexOf(c.product)===-1) continue;
+    if(productList.indexOf(c.productAndTopic)===-1) continue;
     if(DATE_FROM_MS>0 && c.openMs<DATE_FROM_MS) continue;
     if(DATE_TO_MS>0   && c.openMs>DATE_TO_MS)   continue;
     result.push(c);
