@@ -338,50 +338,83 @@ footer{position:relative;z-index:1;text-align:center;padding:20px;font-size:.67r
       </div>
     </div>
 
-    <!-- Account table + Success Plan side by side -->
+    <!-- Top Accounts — Manufacturing -->
+    <div class="glass" style="margin-bottom:20px">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title" style="color:#60a5fa">&#127942; Top Accounts — Manufacturing Cloud SEV1</div>
+          <div class="card-sub" id="s1-sub-acct-mfg">Loading…</div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 20px;overflow-x:auto">
+        <table class="acct-table">
+          <thead><tr><th>#</th><th>Account</th><th>SEV1</th><th>Issue Types Raised</th></tr></thead>
+          <tbody id="s1-tbl-acct-mfg"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Top Accounts — Automotive -->
+    <div class="glass" style="margin-bottom:20px">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title" style="color:#a78bfa">&#127942; Top Accounts — Automotive Cloud SEV1</div>
+          <div class="card-sub" id="s1-sub-acct-auto">Loading…</div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 20px;overflow-x:auto">
+        <table class="acct-table">
+          <thead><tr><th>#</th><th>Account</th><th>SEV1</th><th>Issue Types Raised</th></tr></thead>
+          <tbody id="s1-tbl-acct-auto"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Success Plan + Issue Charts side by side per cloud -->
     <div class="sev1-grid-2">
 
-      <!-- Top Accounts -->
+      <!-- Success Plan Mfg -->
       <div class="glass">
         <div class="card-hdr">
           <div>
-            <div class="card-title">&#127942; Top Accounts by SEV1 Cases</div>
-            <div class="card-sub">Issue types raised per account · respects date filter</div>
+            <div class="card-title" style="color:#60a5fa">Success Plan — Manufacturing SEV1</div>
+            <div class="card-sub" id="s1-sub-sp-mfg">Loading…</div>
           </div>
         </div>
-        <div style="padding:16px 20px 20px;overflow-x:auto">
-          <table class="acct-table">
-            <thead><tr><th>#</th><th>Account</th><th>Product</th><th>SEV1</th><th>Issue Types Raised</th></tr></thead>
-            <tbody id="s1-tbl-acct"></tbody>
+        <div class="sp-inner">
+          <div class="ch-wrap"><canvas id="s1-chart-sp-mfg"></canvas></div>
+          <table class="sp-table">
+            <thead><tr><th>Success Plan</th><th>SEV1</th><th>%</th><th>Volume</th></tr></thead>
+            <tbody id="s1-tbl-sp-mfg"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Success Plan for SEV1 -->
+      <!-- Success Plan Auto -->
       <div class="glass">
         <div class="card-hdr">
           <div>
-            <div class="card-title">Success Plan — SEV1 Distribution</div>
-            <div class="card-sub">SEV1 cases by success plan tier · filtered range</div>
+            <div class="card-title" style="color:#a78bfa">Success Plan — Automotive SEV1</div>
+            <div class="card-sub" id="s1-sub-sp-auto">Loading…</div>
           </div>
         </div>
         <div class="sp-inner">
-          <div class="ch-wrap"><canvas id="s1-chart-sp"></canvas></div>
+          <div class="ch-wrap"><canvas id="s1-chart-sp-auto"></canvas></div>
           <table class="sp-table">
             <thead><tr><th>Success Plan</th><th>SEV1</th><th>%</th><th>Volume</th></tr></thead>
-            <tbody id="s1-tbl-sp"></tbody>
+            <tbody id="s1-tbl-sp-auto"></tbody>
           </table>
         </div>
       </div>
 
     </div>
 
-    <!-- Issue Type Distribution -->
+    <!-- Issue Type Distribution per cloud -->
     <div class="glass" style="margin-top:20px">
       <div class="card-hdr">
         <div>
           <div class="card-title">&#128202; Issue Type Distribution — SEV1 Cases</div>
-          <div class="card-sub">What types of issues drove SEV1 · Manufacturing + Automotive · respects date filter</div>
+          <div class="card-sub" id="s1-sub-issues">Loading…</div>
         </div>
       </div>
       <div style="padding:16px 20px 20px;display:grid;grid-template-columns:1fr 1fr;gap:24px">
@@ -638,16 +671,48 @@ function renderVolumeTrend(){
   });
 }
 
+/* Returns effective date range for SEV1 components — defaults to current month if no global filter */
+function getEffectiveSev1Range(){
+  if(DATE_FROM_MS>0 && DATE_TO_MS>0) return {from:DATE_FROM_MS, to:DATE_TO_MS, label:fmtDate(DATE_FROM_MS)+' → '+fmtDate(DATE_TO_MS)};
+  const now=DT.now();
+  return {from:now.startOf('month').toMillis(), to:now.endOf('month').toMillis(), label:now.toFormat('MMMM yyyy')+' (default)'};
+}
+function getFilteredSev1(dataset,productList,from,to){
+  var result=[];
+  for(var i=0;i<dataset.length;i++){
+    var c=dataset[i];
+    if(productList.indexOf(c.productAndTopic)===-1) continue;
+    if(c.openMs<from) continue;
+    if(c.openMs>to) continue;
+    if(c.severity!=='Level 1 - Critical') continue;
+    result.push(c);
+  }
+  return result;
+}
+
 function renderSev1Tab(){
-  const mfg=getFiltered(ALL_MFG,MFG_PRODUCTS).filter(c=>c.severity==='Level 1 - Critical');
-  const auto=getFiltered(ALL_AUTO,AUTO_PRODUCTS).filter(c=>c.severity==='Level 1 - Critical');
+  const range=getEffectiveSev1Range();
+  /* KPI & trend use full global filter (all time or selected range) */
+  const mfgAll=getFiltered(ALL_MFG,MFG_PRODUCTS).filter(c=>c.severity==='Level 1 - Critical');
+  const autoAll=getFiltered(ALL_AUTO,AUTO_PRODUCTS).filter(c=>c.severity==='Level 1 - Critical');
+  const allKpi=[...mfgAll,...autoAll];
+  /* Account table, Success Plan, Issue charts use effective range (current month default) */
+  const mfg=getFilteredSev1(ALL_MFG,MFG_PRODUCTS,range.from,range.to);
+  const auto=getFilteredSev1(ALL_AUTO,AUTO_PRODUCTS,range.from,range.to);
   const all=[...mfg,...auto];
   const el=id=>document.getElementById(id);
 
-  animateCount(el('s1-tot'),  all.length);
-  animateCount(el('s1-mfg'),  mfg.length);
-  animateCount(el('s1-auto'), auto.length);
-  animateCount(el('s1-esc'),  all.filter(c=>c.isEscalated).length);
+  /* Update subtitles to show active period */
+  el('s1-sub-acct-mfg').textContent='Manufacturing Cloud · '+range.label;
+  el('s1-sub-acct-auto').textContent='Automotive Cloud · '+range.label;
+  el('s1-sub-sp-mfg').textContent='Manufacturing SEV1 by success plan · '+range.label;
+  el('s1-sub-sp-auto').textContent='Automotive SEV1 by success plan · '+range.label;
+  el('s1-sub-issues').textContent='What types of issues drove SEV1 · '+range.label;
+
+  animateCount(el('s1-tot'),  allKpi.length);
+  animateCount(el('s1-mfg'),  mfgAll.length);
+  animateCount(el('s1-auto'), autoAll.length);
+  animateCount(el('s1-esc'),  allKpi.filter(c=>c.isEscalated).length);
 
   /* ── Monthly Trend ── */
   const now=DT.now();
@@ -657,8 +722,8 @@ function renderSev1Tab(){
     const mo=now.minus({months:i});
     const s=mo.startOf('month').toMillis(); const e=mo.endOf('month').toMillis();
     tLabels.push(mo.toFormat('MMM yyyy'));
-    mfgTrend.push(mfg.filter(c=>c.openMs>=s&&c.openMs<=e).length);
-    autoTrend.push(auto.filter(c=>c.openMs>=s&&c.openMs<=e).length);
+    mfgTrend.push(mfgAll.filter(c=>c.openMs>=s&&c.openMs<=e).length);
+    autoTrend.push(autoAll.filter(c=>c.openMs>=s&&c.openMs<=e).length);
   }
   destroyChart('s1-chart-trend');
   CH['s1-chart-trend']=new Chart(el('s1-chart-trend').getContext('2d'),{
@@ -684,42 +749,76 @@ function renderSev1Tab(){
     }
   });
 
-  /* ── Top Accounts with issue types ── */
-  const acctMap={};
-  all.forEach(c=>{
-    if(!acctMap[c.account]) acctMap[c.account]={count:0,product:c.productAndTopic,topics:{}};
-    acctMap[c.account].count++;
-    acctMap[c.account].topics[c.topic]=(acctMap[c.account].topics[c.topic]||0)+1;
-  });
-  const sorted=Object.entries(acctMap).sort((a,b)=>b[1].count-a[1].count).slice(0,10);
-  const maxA=sorted.length?sorted[0][1].count:1;
   const ISSUE_COLORS=['#f43f5e','#f97316','#fbbf24','#a3e635','#34d399','#22d3ee','#60a5fa','#a78bfa','#e879f9','#fb7185'];
-  el('s1-tbl-acct').innerHTML=sorted.map(([acct,d],i)=>{
-    const prod=d.product==='Industry-Manufacturing Cloud'?'<span style="color:#60a5fa">Mfg</span>':'<span style="color:#a78bfa">Auto</span>';
-    const topicsSorted=Object.entries(d.topics).sort((a,b)=>b[1]-a[1]);
-    const topicTags=topicsSorted.map((t,ti)=>`<span style="display:inline-block;margin:2px 3px 2px 0;padding:2px 8px;border-radius:10px;font-size:.58rem;font-weight:700;background:${ISSUE_COLORS[ti%ISSUE_COLORS.length]}22;color:${ISSUE_COLORS[ti%ISSUE_COLORS.length]};border:1px solid ${ISSUE_COLORS[ti%ISSUE_COLORS.length]}44" title="${t[0]}">${t[0].length>22?t[0].slice(0,20)+'…':t[0]} <span style="opacity:.7">(${t[1]})</span></span>`).join('');
-    return`<tr>
-      <td style="color:#475569;font-weight:700">${i+1}</td>
-      <td style="color:#e2e8f0;font-weight:600;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${acct}">${acct}</td>
-      <td>${prod}</td>
-      <td><strong style="color:#f87171;font-size:1rem">${d.count}</strong></td>
-      <td style="max-width:280px">${topicTags}</td>
-    </tr>`;
-  }).join('')||'<tr><td colspan="5" style="text-align:center;color:#475569;padding:20px">No SEV1 cases in selected range</td></tr>';
 
-  /* ── Issue Type Distribution ── */
+  /* ── Account table builder (per cloud) ── */
+  function buildAcctTable(tbodyId,cases,emptyMsg){
+    const amap={};
+    cases.forEach(c=>{
+      if(!amap[c.account]) amap[c.account]={count:0,topics:{}};
+      amap[c.account].count++;
+      amap[c.account].topics[c.topic]=(amap[c.account].topics[c.topic]||0)+1;
+    });
+    const rows=Object.entries(amap).sort((a,b)=>b[1].count-a[1].count).slice(0,10);
+    el(tbodyId).innerHTML=rows.map(([acct,d],i)=>{
+      const topicTags=Object.entries(d.topics).sort((a,b)=>b[1]-a[1]).map((t,ti)=>
+        `<span style="display:inline-block;margin:2px 3px 2px 0;padding:2px 8px;border-radius:10px;font-size:.58rem;font-weight:700;background:${ISSUE_COLORS[ti%10]}22;color:${ISSUE_COLORS[ti%10]};border:1px solid ${ISSUE_COLORS[ti%10]}44" title="${t[0]}">${t[0].length>24?t[0].slice(0,22)+'…':t[0]} <span style="opacity:.7">(${t[1]})</span></span>`
+      ).join('');
+      return`<tr>
+        <td style="color:#475569;font-weight:700">${i+1}</td>
+        <td style="color:#e2e8f0;font-weight:600;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${acct}">${acct}</td>
+        <td><strong style="color:#f87171;font-size:1rem">${d.count}</strong></td>
+        <td>${topicTags}</td>
+      </tr>`;
+    }).join('')||`<tr><td colspan="4" style="text-align:center;color:#475569;padding:20px">${emptyMsg}</td></tr>`;
+  }
+  buildAcctTable('s1-tbl-acct-mfg', mfg, 'No Manufacturing SEV1 cases in selected range');
+  buildAcctTable('s1-tbl-acct-auto', auto, 'No Automotive SEV1 cases in selected range');
+
+  /* ── Success Plan chart+table builder (per cloud) ── */
+  function buildSpSection(chartId,tbodyId,cases){
+    const spCounts=SP_LABELS.map(s=>cases.filter(c=>c.successPlan===s).length);
+    const spTotal=cases.length||1;
+    destroyChart(chartId);
+    CH[chartId]=new Chart(el(chartId).getContext('2d'),{
+      type:'doughnut',
+      data:{labels:SP_LABELS,datasets:[{data:spCounts,backgroundColor:SP_COLORS,borderWidth:0,hoverOffset:12,borderRadius:4}]},
+      options:{
+        responsive:true,maintainAspectRatio:false,cutout:'65%',
+        animation:{animateRotate:true,duration:900,easing:'easeOutQuart'},
+        plugins:{
+          legend:{position:'right',labels:{font:{size:11},color:'#94a3b8',padding:12,usePointStyle:true,pointStyleWidth:8}},
+          tooltip:{backgroundColor:'rgba(15,23,41,.95)',titleColor:'#e2e8f0',bodyColor:'#94a3b8',borderColor:'rgba(255,255,255,.1)',borderWidth:1,padding:10,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${((ctx.parsed/spTotal)*100).toFixed(1)}%)`}}
+        }
+      }
+    });
+    const maxSP=Math.max(...spCounts,1);
+    el(tbodyId).innerHTML=SP_LABELS.map((sp,i)=>{
+      const pct=((spCounts[i]/spTotal)*100).toFixed(1);
+      const bar=Math.round(spCounts[i]/maxSP*100);
+      return`<tr>
+        <td><span class="pill" style="background:${SP_COLORS[i]}25;color:${SP_COLORS[i]};border:1px solid ${SP_COLORS[i]}50">${sp}</span></td>
+        <td><strong style="color:#f87171">${spCounts[i].toLocaleString()}</strong></td>
+        <td style="color:#64748b">${pct}%</td>
+        <td style="width:120px"><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${bar}%;background:linear-gradient(90deg,${SP_COLORS[i]},${SP_COLORS[i]}99)"></div></div></div></td>
+      </tr>`;
+    }).join('');
+  }
+  buildSpSection('s1-chart-sp-mfg','s1-tbl-sp-mfg',mfg);
+  buildSpSection('s1-chart-sp-auto','s1-tbl-sp-auto',auto);
+
+  /* ── Issue Type Distribution (per cloud horizontal bar) ── */
   function renderIssueChart(canvasId,cases,color){
     const tmap={};
     cases.forEach(c=>{tmap[c.topic]=(tmap[c.topic]||0)+1;});
     const entries=Object.entries(tmap).sort((a,b)=>b[1]-a[1]);
-    const labels=entries.map(e=>e[0]); const vals=entries.map(e=>e[1]);
     destroyChart(canvasId);
     if(!entries.length) return;
     CH[canvasId]=new Chart(el(canvasId).getContext('2d'),{
       type:'bar',
       data:{
-        labels,
-        datasets:[{data:vals,backgroundColor:color+'bb',borderColor:color,borderWidth:1.5,borderRadius:5,borderSkipped:false,hoverBackgroundColor:color}]
+        labels:entries.map(e=>e[0]),
+        datasets:[{data:entries.map(e=>e[1]),backgroundColor:color+'bb',borderColor:color,borderWidth:1.5,borderRadius:5,borderSkipped:false,hoverBackgroundColor:color}]
       },
       options:{
         indexAxis:'y',responsive:true,maintainAspectRatio:false,
@@ -730,41 +829,13 @@ function renderSev1Tab(){
         },
         scales:{
           x:{beginAtZero:true,ticks:{color:'#475569',font:{size:9},stepSize:1},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
-          y:{ticks:{color:'#94a3b8',font:{size:10},callback:v=>v.length>22?v.slice(0,20)+'…':v},grid:{display:false},border:{display:false}}
+          y:{ticks:{color:'#94a3b8',font:{size:10},callback:v=>v.length>24?v.slice(0,22)+'…':v},grid:{display:false},border:{display:false}}
         }
       }
     });
   }
   renderIssueChart('s1-chart-mfg-issues',mfg,'#0070d2');
   renderIssueChart('s1-chart-auto-issues',auto,'#7c3aed');
-
-  /* ── Success Plan for SEV1 ── */
-  const spCounts=SP_LABELS.map(s=>all.filter(c=>c.successPlan===s).length);
-  const spTotal=all.length||1;
-  destroyChart('s1-chart-sp');
-  CH['s1-chart-sp']=new Chart(el('s1-chart-sp').getContext('2d'),{
-    type:'doughnut',
-    data:{labels:SP_LABELS,datasets:[{data:spCounts,backgroundColor:SP_COLORS,borderWidth:0,hoverOffset:12,borderRadius:4}]},
-    options:{
-      responsive:true,maintainAspectRatio:false,cutout:'65%',
-      animation:{animateRotate:true,duration:900,easing:'easeOutQuart'},
-      plugins:{
-        legend:{position:'right',labels:{font:{size:11},color:'#94a3b8',padding:14,usePointStyle:true,pointStyleWidth:8}},
-        tooltip:{backgroundColor:'rgba(15,23,41,.95)',titleColor:'#e2e8f0',bodyColor:'#94a3b8',borderColor:'rgba(244,63,94,.2)',borderWidth:1,padding:10,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${((ctx.parsed/spTotal)*100).toFixed(1)}%)`}}
-      }
-    }
-  });
-  const maxSP=Math.max(...spCounts,1);
-  el('s1-tbl-sp').innerHTML=SP_LABELS.map((sp,i)=>{
-    const pct=((spCounts[i]/spTotal)*100).toFixed(1);
-    const bar=Math.round(spCounts[i]/maxSP*100);
-    return`<tr>
-      <td><span class="pill" style="background:${SP_COLORS[i]}25;color:${SP_COLORS[i]};border:1px solid ${SP_COLORS[i]}50">${sp}</span></td>
-      <td><strong style="color:#f87171">${spCounts[i].toLocaleString()}</strong></td>
-      <td style="color:#64748b">${pct}%</td>
-      <td style="width:120px"><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${bar}%;background:linear-gradient(90deg,${SP_COLORS[i]},${SP_COLORS[i]}99)"></div></div></div></td>
-    </tr>`;
-  }).join('');
 }
 
 function runFilters(){
