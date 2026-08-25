@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Cases IQ — Manufacturing &amp; Automotive · Support</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:'Salesforce Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f3f3f3;color:#16325c;min-height:100vh}
+header{background:linear-gradient(135deg,#0070d2 0%,#032d60 100%);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.brand{display:flex;align-items:center;gap:12px}
+header h1{font-size:1.2rem;font-weight:700}
+header .sub{font-size:.72rem;opacity:.75;margin-top:2px}
+.hbadge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:3px 11px;font-size:.7rem;font-weight:700}
+.hbadge.rt{background:rgba(255,183,93,.28);border-color:rgba(255,183,93,.6)}
+.hdr-right{font-size:.72rem;opacity:.8;text-align:right}
+.hdr-right strong{display:block;font-size:.85rem;opacity:1}
+
+/* ── Date Filter Bar ── */
+.date-filter-bar{background:#fff;border-bottom:2px solid #e0f0ff;padding:14px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:0 1px 6px rgba(0,112,210,.09)}
+.date-filter-label{font-size:.78rem;font-weight:700;color:#0070d2;white-space:nowrap}
+.date-inputs{display:flex;align-items:center;gap:10px;background:#f0f7ff;border:1.5px solid #0070d2;border-radius:8px;padding:7px 16px}
+.date-inputs label{font-size:.68rem;font-weight:700;color:#54698d;white-space:nowrap}
+.date-inputs input[type=date]{border:none;background:transparent;font-size:.85rem;color:#16325c;outline:none;cursor:pointer;font-weight:600}
+.date-sep{font-size:1rem;font-weight:700;color:#0070d2;padding:0 4px}
+.date-presets{display:flex;gap:6px;flex-wrap:wrap}
+.preset-btn{font-size:.7rem;font-weight:700;padding:5px 12px;border-radius:16px;border:1.5px solid #dddbda;background:#f4f6f9;color:#54698d;cursor:pointer;transition:all .12s;white-space:nowrap}
+.preset-btn:hover{background:#e0f0ff;color:#0070d2;border-color:#0070d2}
+.preset-btn.active{background:#0070d2;color:#fff;border-color:#0070d2}
+.date-range-display{font-size:.72rem;font-weight:700;color:#0070d2;background:#e0f0ff;border-radius:6px;padding:5px 14px;white-space:nowrap;border:1px solid #b8d9f5}
+.clear-btn{font-size:.7rem;font-weight:700;padding:5px 12px;border-radius:16px;border:1.5px solid #c23934;background:#fdecea;color:#c23934;cursor:pointer;transition:all .12s}
+.clear-btn:hover{background:#c23934;color:#fff}
+
+.tab-bar{background:#fff;border-bottom:2px solid #e0e0e0;padding:0 24px;display:flex}
+.tab-btn{padding:12px 26px 10px;font-size:.87rem;font-weight:700;color:#54698d;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;display:flex;align-items:center;gap:7px}
+.tab-btn:hover{color:#0070d2}
+.tab-btn.active{color:#0070d2;border-bottom-color:#0070d2}
+.tdot{width:8px;height:8px;border-radius:50%;background:#c9d3e0}
+.tab-btn.active .tdot-mfg{background:#0070d2}
+.tab-btn.active .tdot-auto{background:#4a5be8}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+.content{padding:28px 24px;display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start}
+@media(max-width:700px){.content{grid-template-columns:1fr}}
+
+/* Total Case Card */
+.total-card{background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,112,210,.1);border-top:5px solid #0070d2;padding:28px 24px;text-align:center}
+.total-label{font-size:.72rem;font-weight:700;color:#54698d;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.total-val{font-size:3.8rem;font-weight:700;color:#0070d2;line-height:1}
+.total-sub{font-size:.72rem;color:#7f9ab5;margin-top:8px}
+.total-breakdown{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tb-item{background:#f4f6f9;border-radius:8px;padding:10px 8px;text-align:center}
+.tb-val{font-size:1.5rem;font-weight:700;color:#16325c}
+.tb-lbl{font-size:.6rem;font-weight:700;color:#54698d;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+
+/* Success Plan Card */
+.sp-card{background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,112,210,.1);padding:20px 22px}
+.sp-card-hdr{font-size:.82rem;font-weight:700;color:#16325c;margin-bottom:4px}
+.sp-card-sub{font-size:.67rem;color:#54698d;margin-bottom:16px}
+.ch-wrap{height:280px;position:relative}
+.sp-table{width:100%;border-collapse:collapse;margin-top:16px;font-size:.75rem}
+.sp-table thead th{background:#f4f6f9;padding:7px 10px;text-align:left;font-weight:700;font-size:.63rem;color:#54698d;text-transform:uppercase;border-bottom:1px solid #dddbda}
+.sp-table tbody tr{border-bottom:1px solid #f4f6f9}
+.sp-table tbody tr:last-child{border-bottom:none}
+.sp-table tbody td{padding:7px 10px;color:#16325c}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.63rem;font-weight:700}
+.bar-wrap{display:flex;align-items:center;gap:6px}
+.bar-bg{flex:1;height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden;min-width:40px}
+.bar-fill{height:100%;border-radius:3px}
+
+footer{text-align:center;padding:16px;font-size:.68rem;color:#7f9ab5}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="8" fill="rgba(255,255,255,.15)"/>
+      <path d="M18 7C12 7 7 12 7 18s5 11 11 11 11-5 11-11S24 7 18 7zm0 4a3 3 0 110 6 3 3 0 010-6zm0 15.2c-3.7 0-7-1.9-9-4.8.04-3 6-4.65 9-4.65s8.96 1.65 9 4.65c-2 2.9-5.3 4.8-9 4.8z" fill="white"/>
+    </svg>
+    <div>
+      <h1>Cases IQ — Manufacturing &amp; Automotive</h1>
+      <p class="sub">Support Cases · CS Org · Record Type: Support · Created by Manish Garg</p>
+    </div>
+  </div>
+  <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+    <span class="hbadge">Industry-Manufacturing Cloud</span>
+    <span class="hbadge">Industry-Rebate Management</span>
+    <span class="hbadge">Industry-Automotive Cloud</span>
+    <span class="hbadge rt">&#128274; Record Type: Support</span>
+  </div>
+  <div class="hdr-right"><strong id="last-updated">—</strong>CS Org &nbsp;·&nbsp; Manish Garg</div>
+</header>
+
+<!-- ══ DATE FILTER ══ -->
+<div class="date-filter-bar">
+  <span class="date-filter-label">&#128197; Date/Time Opened</span>
+  <div class="date-inputs">
+    <label>Start Date</label>
+    <input type="date" id="f-from" onchange="onDateChange()"/>
+    <span class="date-sep">→</span>
+    <label>End Date</label>
+    <input type="date" id="f-to" onchange="onDateChange()"/>
+  </div>
+  <div class="date-presets">
+    <button class="preset-btn" onclick="applyPreset('thisMonth',this)">This Month</button>
+    <button class="preset-btn" onclick="applyPreset('lastMonth',this)">Last Month</button>
+    <button class="preset-btn" onclick="applyPreset('curAndLast',this)">Current &amp; Last Month</button>
+    <button class="preset-btn" onclick="applyPreset('thisQuarter',this)">This Quarter</button>
+    <button class="preset-btn" onclick="applyPreset('lastQuarter',this)">Last Quarter</button>
+    <button class="preset-btn" onclick="applyPreset(90,this)">Last 90 Days</button>
+    <button class="preset-btn" onclick="applyPreset(365,this)">Last 1 Year</button>
+  </div>
+  <span class="date-range-display" id="range-display">Showing all data</span>
+  <button class="clear-btn" onclick="clearDateFilter()" id="clear-btn" style="display:none">&#10005; Clear</button>
+</div>
+
+<!-- ══ TABS ══ -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-mfg-btn" onclick="switchTab('mfg')">
+    <span class="tdot tdot-mfg"></span>Industry-Manufacturing Cloud
+  </button>
+  <button class="tab-btn" id="tab-auto-btn" onclick="switchTab('auto')">
+    <span class="tdot tdot-auto"></span>Industry-Automotive Cloud
+  </button>
+</div>
+
+<!-- ══ MANUFACTURING ══ -->
+<div class="tab-panel active" id="panel-mfg">
+  <div class="content">
+    <div class="total-card">
+      <div class="total-label">Total Cases</div>
+      <div class="total-val" id="m-tot">—</div>
+      <div class="total-sub">Industry-Manufacturing Cloud &amp; Rebate Management</div>
+      <div class="total-breakdown">
+        <div class="tb-item"><div class="tb-val" id="m-open">—</div><div class="tb-lbl">Open</div></div>
+        <div class="tb-item"><div class="tb-val" id="m-closed">—</div><div class="tb-lbl">Closed</div></div>
+        <div class="tb-item"><div class="tb-val" id="m-esc">—</div><div class="tb-lbl">Escalated</div></div>
+        <div class="tb-item"><div class="tb-val" id="m-sev1">—</div><div class="tb-lbl">SEV1</div></div>
+      </div>
+    </div>
+    <div class="sp-card">
+      <div class="sp-card-hdr">Success Plan Distribution</div>
+      <div class="sp-card-sub">Industry-Manufacturing Cloud &amp; Rebate Management · filtered range</div>
+      <div class="ch-wrap"><canvas id="m-chart-sp"></canvas></div>
+      <table class="sp-table">
+        <thead><tr><th>Success Plan</th><th>Cases</th><th>%</th><th>Volume</th></tr></thead>
+        <tbody id="m-tbl-sp"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AUTOMOTIVE ══ -->
+<div class="tab-panel" id="panel-auto">
+  <div class="content">
+    <div class="total-card" style="border-top-color:#4a5be8">
+      <div class="total-label">Total Cases</div>
+      <div class="total-val" style="color:#4a5be8" id="a-tot">—</div>
+      <div class="total-sub">Industry-Automotive Cloud</div>
+      <div class="total-breakdown">
+        <div class="tb-item"><div class="tb-val" id="a-open">—</div><div class="tb-lbl">Open</div></div>
+        <div class="tb-item"><div class="tb-val" id="a-closed">—</div><div class="tb-lbl">Closed</div></div>
+        <div class="tb-item"><div class="tb-val" id="a-esc">—</div><div class="tb-lbl">Escalated</div></div>
+        <div class="tb-item"><div class="tb-val" id="a-sev1">—</div><div class="tb-lbl">SEV1</div></div>
+      </div>
+    </div>
+    <div class="sp-card">
+      <div class="sp-card-hdr">Success Plan Distribution</div>
+      <div class="sp-card-sub">Industry-Automotive Cloud · filtered range</div>
+      <div class="ch-wrap"><canvas id="a-chart-sp"></canvas></div>
+      <table class="sp-table">
+        <thead><tr><th>Success Plan</th><th>Cases</th><th>%</th><th>Volume</th></tr></thead>
+        <tbody id="a-tbl-sp"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer>Cases IQ · Industry-Manufacturing Cloud &amp; Automotive · Record Type: Support · CS Org · &copy; Salesforce 2026</footer>
+
+<script>
+function seededRng(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646;};}
+
+const MFG_ACCTS=[
+  'American Bath Group (2nd Org)','Areya Technologies LLC','Asset Alliance Leasing Ltd',
+  'Avis Industrial Corporation','Banner Engineering Corp.','CHUO KOKI CO.,LTD.',
+  'Cognizant Technology Solutions Corp','ElringKlinger AG','HPCL–Mittal Energy (HMEL) Limited',
+  'JSW STEEL LIMITED','Ketjen Limited Liability Company','La Doria S.p.A.',
+  'Oldcastle Services, Inc.','PRECISION CAMSHAFTS LIMITED (PCL)','Pentair Water Pool & Spa, Inc.',
+  'Salesforce MVP Premier - Support Account only DO not convert leads',
+  'The NOCO Company','The Nielsen Company (US), LLC','W.R. Grace & CO.-CONN'
+];
+const AUTO_ACCTS=['Ford Motor Company','BMW Group','Toyota Motors','General Motors','Volkswagen AG','Mercedes-Benz','Stellantis','Honda Motors','Hyundai Motor','Rivian Automotive','Lucid Motors','NIO Automotive','Magna International','BorgWarner','Aptiv PLC'];
+const MFG_TOPICS=['Sales Agreement Issues','Rebate Management','Account Based Forecasting','Analytics Issues','Setup or Configuration','API Integration','Account Manager Targets','Advance Account Forecasting','Sales Agreement Analytics','Program Based Business Analytics'];
+const REB_TOPICS=['Rebate Management','Calculation Discrepancy','Accrual Mismatch','Payout Processing','Eligibility Rules','Rebate Analytics','Program Setup'];
+const AUTO_TOPICS=['Connected Vehicle Platform','Vehicle Recall Management','Dealer Network Errors','EV Battery Management','Telematics Integration','Warranty Claims API','Data Sync & Replication','User Provisioning / Access','Reporting / Analytics Issues','API Integration / Connectivity'];
+const MFG_FEATS=['Manufacturing Sales-Sales Agreement','Manufacturing Analytics-Account Manager Targets Analytics','Setup or Configuration-Setup or Configuration','Manufacturing Sales-Account Based Forecasting','Rebate Management-Rebate Management'];
+const REB_FEATS=['Rebate Management-Rebate Management','Manufacturing Analytics-Rebates Management Analytics','Rebate Management-Accruals'];
+const AUTO_FEATS=['Automotive Cloud-Vehicle Service Records','Dealer Management-Dealer Portal Integration','Automotive Cloud-Connected Vehicle API','Fleet Management-Vehicle Tracking','Warranty Management-Warranty Claims API'];
+const STATUSES=['Working','Working','Working','Need More Information','Need More Information','Call/Meeting Scheduled','Qualification','Delivery','Closed','Closed','Solution Provided'];
+const SEVS=['Level 4 - Medium','Level 4 - Medium','Level 4 - Medium','Level 4 - Medium','Level 3 - High','Level 3 - High','Level 3 - High','Level 2 - Urgent','Level 2 - Urgent','Level 1 - Critical'];
+const SPS=['Standard','Standard','Standard','Premier','Premier+','Premier+','Signature Success','Signature Success','Partner Premier'];
+
+let ALL_MFG=[], ALL_AUTO=[];
+
+function generateData(){
+  const rng=seededRng(42);
+  const now=luxon.DateTime.now();
+  function mk(id,prod,accts,cats,feats,openMs){
+    const status=STATUSES[Math.floor(rng()*STATUSES.length)];
+    return{id,product:prod,account:accts[Math.floor(rng()*accts.length)],
+      openMs,status,
+      severity:SEVS[Math.floor(rng()*SEVS.length)],
+      successPlan:SPS[Math.floor(rng()*SPS.length)],
+      isEscalated:rng()<0.09};
+  }
+  const MONTHS=18;
+  let mi=0,ri=0,ai=0;
+  for(let m=0;m<MONTHS;m++){
+    const mo=now.minus({months:MONTHS-1-m});
+    const ms=mo.startOf('month'); const dm=mo.daysInMonth;
+    const rndMs=()=>ms.plus({days:Math.floor(rng()*dm),hours:Math.floor(rng()*24),minutes:Math.floor(rng()*60)}).toMillis();
+    for(let j=0;j<40;j++) ALL_MFG.push(mk('MFG-'+mi++,'Industry-Manufacturing Cloud',MFG_ACCTS,MFG_TOPICS,MFG_FEATS,rndMs()));
+    for(let j=0;j<8;j++)  ALL_MFG.push(mk('REB-'+ri++,'Industry-Rebate Management',MFG_ACCTS,REB_TOPICS,REB_FEATS,rndMs()));
+    for(let j=0;j<30;j++) ALL_AUTO.push(mk('AUTO-'+ai++,'Industry-Automotive Cloud',AUTO_ACCTS,AUTO_TOPICS,AUTO_FEATS,rndMs()));
+  }
+}
+
+const DT=luxon.DateTime;
+var DATE_FROM_MS=0, DATE_TO_MS=0;
+const MFG_PRODUCTS=['Industry-Manufacturing Cloud','Industry-Rebate Management'];
+const AUTO_PRODUCTS=['Industry-Automotive Cloud'];
+
+function getFiltered(dataset,productList){
+  var result=[];
+  for(var i=0;i<dataset.length;i++){
+    var c=dataset[i];
+    if(productList.indexOf(c.product)===-1) continue;
+    if(DATE_FROM_MS>0 && c.openMs<DATE_FROM_MS) continue;
+    if(DATE_TO_MS>0   && c.openMs>DATE_TO_MS)   continue;
+    result.push(c);
+  }
+  return result;
+}
+
+function msToDateInput(ms){return DT.fromMillis(ms).toFormat('yyyy-MM-dd');}
+function fmtDate(ms){return DT.fromMillis(ms).toFormat('MMM d, yyyy');}
+
+function applyDateRange(fromMs,toMs){
+  DATE_FROM_MS=fromMs; DATE_TO_MS=toMs;
+  document.getElementById('f-from').value=msToDateInput(fromMs);
+  document.getElementById('f-to').value=msToDateInput(toMs);
+  document.getElementById('range-display').textContent=fmtDate(fromMs)+' → '+fmtDate(toMs);
+  document.getElementById('clear-btn').style.display='';
+  runFilters();
+}
+
+function onDateChange(){
+  var fv=document.getElementById('f-from').value;
+  var tv=document.getElementById('f-to').value;
+  if(!fv||!tv) return;
+  var fd=DT.fromISO(fv), td=DT.fromISO(tv);
+  if(fd.isValid&&td.isValid){
+    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+    applyDateRange(fd.startOf('day').toMillis(), td.endOf('day').toMillis());
+  }
+}
+
+function applyPreset(preset,el){
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const now=DT.now(); let f,t;
+  if(preset==='thisMonth'){f=now.startOf('month');t=now.endOf('month');}
+  else if(preset==='lastMonth'){const lm=now.minus({months:1});f=lm.startOf('month');t=lm.endOf('month');}
+  else if(preset==='curAndLast'){f=now.minus({months:1}).startOf('month');t=now.endOf('month');}
+  else if(preset==='thisQuarter'){const qm=Math.floor((now.month-1)/3)*3+1;f=DT.fromObject({year:now.year,month:qm,day:1}).startOf('day');t=now.endOf('day');}
+  else if(preset==='lastQuarter'){
+    const qm=Math.floor((now.month-1)/3)*3+1;
+    const thisQS=DT.fromObject({year:now.year,month:qm,day:1});
+    const lqe=thisQS.minus({days:1}).endOf('day');
+    const lqm=Math.floor((lqe.month-1)/3)*3+1;
+    f=DT.fromObject({year:lqe.year,month:lqm,day:1}).startOf('day');t=lqe;
+  } else {t=now.endOf('day');f=now.minus({days:Number(preset)-1}).startOf('day');}
+  applyDateRange(f.toMillis(),t.toMillis());
+}
+
+function clearDateFilter(){
+  DATE_FROM_MS=0; DATE_TO_MS=0;
+  document.getElementById('f-from').value='';
+  document.getElementById('f-to').value='';
+  document.getElementById('range-display').textContent='Showing all data';
+  document.getElementById('clear-btn').style.display='none';
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  runFilters();
+}
+
+let activeTab='mfg';
+function switchTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab+'-btn').classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+const CH={};
+function destroyChart(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
+const SP_LABELS=['Standard','Premier','Premier+','Signature Success','Partner Premier'];
+const SP_COLORS=['#54698d','#017d9c','#1b96ff','#7f5af0','#e68b21'];
+
+function renderTab(p,cases,color){
+  const isOpen=c=>['Working','Need More Information','Call/Meeting Scheduled','Qualification','Delivery'].includes(c.status);
+  const isClosed=c=>['Closed','Solution Provided'].includes(c.status);
+
+  const el=id=>document.getElementById(id);
+  const set=(id,v)=>{const e=el(id);if(e)e.textContent=typeof v==='number'?v.toLocaleString():v;};
+
+  set(p+'-tot',    cases.length);
+  set(p+'-open',   cases.filter(isOpen).length);
+  set(p+'-closed', cases.filter(isClosed).length);
+  set(p+'-esc',    cases.filter(c=>c.isEscalated).length);
+  set(p+'-sev1',   cases.filter(c=>c.severity==='Level 1 - Critical').length);
+
+  const counts=SP_LABELS.map(s=>cases.filter(c=>c.successPlan===s).length);
+  const total=cases.length||1;
+
+  destroyChart(p+'-chart-sp');
+  CH[p+'-chart-sp']=new Chart(el(p+'-chart-sp').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:SP_LABELS,datasets:[{data:counts,backgroundColor:SP_COLORS,borderWidth:2,borderColor:'#fff',hoverOffset:8}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{
+        legend:{position:'right',labels:{font:{size:11},color:'#54698d',padding:12}},
+        tooltip:{titleFont:{size:10},bodyFont:{size:10}}
+      }
+    }
+  });
+
+  const maxC=Math.max(...counts,1);
+  el(p+'-tbl-sp').innerHTML=SP_LABELS.map((sp,i)=>{
+    const pct=((counts[i]/total)*100).toFixed(1);
+    const bar=Math.round(counts[i]/maxC*100);
+    return`<tr>
+      <td><span class="pill" style="background:${SP_COLORS[i]}22;color:${SP_COLORS[i]};border:1px solid ${SP_COLORS[i]}44">${sp}</span></td>
+      <td><strong>${counts[i].toLocaleString()}</strong></td>
+      <td style="color:#54698d">${pct}%</td>
+      <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${bar}%;background:${SP_COLORS[i]}"></div></div></div></td>
+    </tr>`;
+  }).join('');
+}
+
+function runFilters(){
+  renderTab('m', getFiltered(ALL_MFG,  MFG_PRODUCTS),  '#0070d2');
+  renderTab('a', getFiltered(ALL_AUTO, AUTO_PRODUCTS), '#4a5be8');
+  document.getElementById('last-updated').textContent=
+    'Updated: '+new Date().toLocaleString('en-US',{month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  generateData();
+  runFilters();
+});
+</script>
+</body>
+</html>
