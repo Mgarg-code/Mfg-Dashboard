@@ -346,12 +346,12 @@ footer{position:relative;z-index:1;text-align:center;padding:20px;font-size:.67r
         <div class="card-hdr">
           <div>
             <div class="card-title">&#127942; Top Accounts by SEV1 Cases</div>
-            <div class="card-sub">All SEV1 · sorted by count · respects date filter</div>
+            <div class="card-sub">Issue types raised per account · respects date filter</div>
           </div>
         </div>
         <div style="padding:16px 20px 20px;overflow-x:auto">
           <table class="acct-table">
-            <thead><tr><th>#</th><th>Account</th><th>Product</th><th>SEV1 Cases</th><th>Volume</th></tr></thead>
+            <thead><tr><th>#</th><th>Account</th><th>Product</th><th>SEV1</th><th>Issue Types Raised</th></tr></thead>
             <tbody id="s1-tbl-acct"></tbody>
           </table>
         </div>
@@ -374,6 +374,26 @@ footer{position:relative;z-index:1;text-align:center;padding:20px;font-size:.67r
         </div>
       </div>
 
+    </div>
+
+    <!-- Issue Type Distribution -->
+    <div class="glass" style="margin-top:20px">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">&#128202; Issue Type Distribution — SEV1 Cases</div>
+          <div class="card-sub">What types of issues drove SEV1 · Manufacturing + Automotive · respects date filter</div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 20px;display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div>
+          <div style="font-size:.65rem;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Manufacturing Cloud</div>
+          <div style="position:relative;height:220px"><canvas id="s1-chart-mfg-issues"></canvas></div>
+        </div>
+        <div>
+          <div style="font-size:.65rem;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Automotive Cloud</div>
+          <div style="position:relative;height:220px"><canvas id="s1-chart-auto-issues"></canvas></div>
+        </div>
+      </div>
     </div>
 
     <!-- SOQL Reference -->
@@ -423,7 +443,7 @@ function generateData(){
   const now=luxon.DateTime.now();
   function mk(id,prod,accts,cats,feats,openMs){
     const status=STATUSES[Math.floor(rng()*STATUSES.length)];
-    return{id,productAndTopic:prod,account:accts[Math.floor(rng()*accts.length)],openMs,status,severity:SEVS[Math.floor(rng()*SEVS.length)],successPlan:SPS[Math.floor(rng()*SPS.length)],isEscalated:rng()<0.09};
+    return{id,productAndTopic:prod,account:accts[Math.floor(rng()*accts.length)],openMs,status,severity:SEVS[Math.floor(rng()*SEVS.length)],successPlan:SPS[Math.floor(rng()*SPS.length)],isEscalated:rng()<0.09,topic:cats[Math.floor(rng()*cats.length)]};
   }
   const MONTHS=18; let mi=0,ai=0;
   for(let m=0;m<MONTHS;m++){
@@ -664,25 +684,59 @@ function renderSev1Tab(){
     }
   });
 
-  /* ── Top Accounts ── */
+  /* ── Top Accounts with issue types ── */
   const acctMap={};
   all.forEach(c=>{
-    if(!acctMap[c.account]) acctMap[c.account]={count:0,product:c.productAndTopic};
+    if(!acctMap[c.account]) acctMap[c.account]={count:0,product:c.productAndTopic,topics:{}};
     acctMap[c.account].count++;
+    acctMap[c.account].topics[c.topic]=(acctMap[c.account].topics[c.topic]||0)+1;
   });
   const sorted=Object.entries(acctMap).sort((a,b)=>b[1].count-a[1].count).slice(0,10);
   const maxA=sorted.length?sorted[0][1].count:1;
+  const ISSUE_COLORS=['#f43f5e','#f97316','#fbbf24','#a3e635','#34d399','#22d3ee','#60a5fa','#a78bfa','#e879f9','#fb7185'];
   el('s1-tbl-acct').innerHTML=sorted.map(([acct,d],i)=>{
-    const bar=Math.round(d.count/maxA*100);
-    const prod=d.product==='Industry-Manufacturing Cloud'?'<span style="color:#60a5fa">Mfg Cloud</span>':'<span style="color:#a78bfa">Auto Cloud</span>';
+    const prod=d.product==='Industry-Manufacturing Cloud'?'<span style="color:#60a5fa">Mfg</span>':'<span style="color:#a78bfa">Auto</span>';
+    const topicsSorted=Object.entries(d.topics).sort((a,b)=>b[1]-a[1]);
+    const topicTags=topicsSorted.map((t,ti)=>`<span style="display:inline-block;margin:2px 3px 2px 0;padding:2px 8px;border-radius:10px;font-size:.58rem;font-weight:700;background:${ISSUE_COLORS[ti%ISSUE_COLORS.length]}22;color:${ISSUE_COLORS[ti%ISSUE_COLORS.length]};border:1px solid ${ISSUE_COLORS[ti%ISSUE_COLORS.length]}44" title="${t[0]}">${t[0].length>22?t[0].slice(0,20)+'…':t[0]} <span style="opacity:.7">(${t[1]})</span></span>`).join('');
     return`<tr>
       <td style="color:#475569;font-weight:700">${i+1}</td>
-      <td style="color:#e2e8f0;font-weight:600;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${acct}">${acct}</td>
+      <td style="color:#e2e8f0;font-weight:600;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${acct}">${acct}</td>
       <td>${prod}</td>
       <td><strong style="color:#f87171;font-size:1rem">${d.count}</strong></td>
-      <td style="width:100px"><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${bar}%;background:linear-gradient(90deg,#f43f5e,#f87171)"></div></div></div></td>
+      <td style="max-width:280px">${topicTags}</td>
     </tr>`;
   }).join('')||'<tr><td colspan="5" style="text-align:center;color:#475569;padding:20px">No SEV1 cases in selected range</td></tr>';
+
+  /* ── Issue Type Distribution ── */
+  function renderIssueChart(canvasId,cases,color){
+    const tmap={};
+    cases.forEach(c=>{tmap[c.topic]=(tmap[c.topic]||0)+1;});
+    const entries=Object.entries(tmap).sort((a,b)=>b[1]-a[1]);
+    const labels=entries.map(e=>e[0]); const vals=entries.map(e=>e[1]);
+    destroyChart(canvasId);
+    if(!entries.length) return;
+    CH[canvasId]=new Chart(el(canvasId).getContext('2d'),{
+      type:'bar',
+      data:{
+        labels,
+        datasets:[{data:vals,backgroundColor:color+'bb',borderColor:color,borderWidth:1.5,borderRadius:5,borderSkipped:false,hoverBackgroundColor:color}]
+      },
+      options:{
+        indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        animation:{duration:800,easing:'easeOutQuart'},
+        plugins:{
+          legend:{display:false},
+          tooltip:{backgroundColor:'rgba(15,23,41,.95)',titleColor:'#e2e8f0',bodyColor:'#94a3b8',borderColor:'rgba(255,255,255,.1)',borderWidth:1,padding:10,callbacks:{label:ctx=>`  ${ctx.parsed.x} SEV1 case${ctx.parsed.x!==1?'s':''}`}}
+        },
+        scales:{
+          x:{beginAtZero:true,ticks:{color:'#475569',font:{size:9},stepSize:1},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+          y:{ticks:{color:'#94a3b8',font:{size:10},callback:v=>v.length>22?v.slice(0,20)+'…':v},grid:{display:false},border:{display:false}}
+        }
+      }
+    });
+  }
+  renderIssueChart('s1-chart-mfg-issues',mfg,'#0070d2');
+  renderIssueChart('s1-chart-auto-issues',auto,'#7c3aed');
 
   /* ── Success Plan for SEV1 ── */
   const spCounts=SP_LABELS.map(s=>all.filter(c=>c.successPlan===s).length);
