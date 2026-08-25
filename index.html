@@ -137,7 +137,7 @@ footer{text-align:center;padding:16px;font-size:.68rem;color:#7f9ab5}
     <div class="total-card">
       <div class="total-label">Total Cases</div>
       <div class="total-val" id="m-tot">—</div>
-      <div class="total-sub">Industry-Manufacturing Cloud &amp; Rebate Management</div>
+      <div class="total-sub">Industry-Manufacturing Cloud</div>
       <div class="total-breakdown">
         <div class="tb-item"><div class="tb-val" id="m-open">—</div><div class="tb-lbl">Open</div></div>
         <div class="tb-item"><div class="tb-val" id="m-closed">—</div><div class="tb-lbl">Closed</div></div>
@@ -147,7 +147,7 @@ footer{text-align:center;padding:16px;font-size:.68rem;color:#7f9ab5}
     </div>
     <div class="sp-card">
       <div class="sp-card-hdr">Success Plan Distribution</div>
-      <div class="sp-card-sub">Industry-Manufacturing Cloud &amp; Rebate Management · filtered range</div>
+      <div class="sp-card-sub">Industry-Manufacturing Cloud · filtered range</div>
       <div class="ch-wrap"><canvas id="m-chart-sp"></canvas></div>
       <table class="sp-table">
         <thead><tr><th>Success Plan</th><th>Cases</th><th>%</th><th>Volume</th></tr></thead>
@@ -235,7 +235,7 @@ function generateData(){
 
 const DT=luxon.DateTime;
 var DATE_FROM_MS=0, DATE_TO_MS=0;
-const MFG_PRODUCTS=['Industry-Manufacturing Cloud','Industry-Rebate Management'];
+const MFG_PRODUCTS=['Industry-Manufacturing Cloud'];
 const AUTO_PRODUCTS=['Industry-Automotive Cloud'];
 
 function getFiltered(dataset,productList){
