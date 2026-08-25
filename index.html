@@ -240,9 +240,10 @@ function generateData(){
     const mo=now.minus({months:MONTHS-1-m});
     const ms=mo.startOf('month'); const dm=mo.daysInMonth;
     const rndMs=()=>ms.plus({days:Math.floor(rng()*dm),hours:Math.floor(rng()*24),minutes:Math.floor(rng()*60)}).toMillis();
-    for(let j=0;j<40;j++) ALL_MFG.push(mk('MFG-'+mi++,'Industry-Manufacturing Cloud',MFG_ACCTS,MFG_TOPICS,MFG_FEATS,rndMs()));
-    for(let j=0;j<8;j++)  ALL_MFG.push(mk('REB-'+ri++,'Industry-Rebate Management',MFG_ACCTS,REB_TOPICS,REB_FEATS,rndMs()));
-    for(let j=0;j<30;j++) ALL_AUTO.push(mk('AUTO-'+ai++,'Industry-Automotive Cloud',AUTO_ACCTS,AUTO_TOPICS,AUTO_FEATS,rndMs()));
+    const mfgCount = 28 + Math.floor(rng()*28);   // 28–55 per month
+    const autoCount = 18 + Math.floor(rng()*22);   // 18–39 per month
+    for(let j=0;j<mfgCount;j++) ALL_MFG.push(mk('MFG-'+mi++,'Industry-Manufacturing Cloud',MFG_ACCTS,MFG_TOPICS,MFG_FEATS,rndMs()));
+    for(let j=0;j<autoCount;j++) ALL_AUTO.push(mk('AUTO-'+ai++,'Industry-Automotive Cloud',AUTO_ACCTS,AUTO_TOPICS,AUTO_FEATS,rndMs()));
   }
 }
 
