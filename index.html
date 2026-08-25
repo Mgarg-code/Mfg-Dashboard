@@ -280,6 +280,13 @@ const SEVS=['Level 4 - Medium','Level 4 - Medium','Level 4 - Medium','Level 4 - 
 const SPS=['Standard','Standard','Standard','Premier','Premier+','Premier+','Signature Success','Signature Success','Partner Premier'];
 
 let ALL_MFG=[], ALL_AUTO=[];
+// Real CS Org monthly counts — cssf_Product_Topic_Name__c IN ('Industry-Manufacturing Cloud','Industry-Rebate Management')
+// Key format: 'YYYY-MM'
+const REAL_MFG_COUNTS={
+  '2026-02':39,'2026-03':50,'2026-04':44,
+  '2026-05':31,'2026-06':49,'2026-07':40,'2026-08':28
+};
+
 function generateData(){
   const rng=seededRng(42);
   const now=luxon.DateTime.now();
@@ -291,8 +298,10 @@ function generateData(){
   for(let m=0;m<MONTHS;m++){
     const mo=now.minus({months:MONTHS-1-m});
     const ms=mo.startOf('month'); const dm=mo.daysInMonth;
+    const key=mo.toFormat('yyyy-MM');
     const rndMs=()=>ms.plus({days:Math.floor(rng()*dm),hours:Math.floor(rng()*24),minutes:Math.floor(rng()*60)}).toMillis();
-    const mfgCount=28+Math.floor(rng()*28);
+    // Use real count if available, otherwise simulate
+    const mfgCount=REAL_MFG_COUNTS[key]!==undefined ? REAL_MFG_COUNTS[key] : 28+Math.floor(rng()*28);
     const autoCount=18+Math.floor(rng()*22);
     for(let j=0;j<mfgCount;j++) ALL_MFG.push(mk('MFG-'+mi++,'Industry-Manufacturing Cloud',MFG_ACCTS,MFG_TOPICS,MFG_FEATS,rndMs()));
     for(let j=0;j<autoCount;j++) ALL_AUTO.push(mk('AUTO-'+ai++,'Industry-Automotive Cloud',AUTO_ACCTS,AUTO_TOPICS,AUTO_FEATS,rndMs()));
