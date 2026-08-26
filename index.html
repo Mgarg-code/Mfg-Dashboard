@@ -115,6 +115,33 @@ header .sub{font-size:.7rem;opacity:.65;margin-top:3px;font-weight:500}
 
 footer{position:relative;z-index:1;text-align:center;padding:20px;font-size:.67rem;color:#334155;border-top:1px solid rgba(255,255,255,.05)}
 
+/* ── Case Detail Modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:#0f1729;border:1px solid rgba(255,255,255,.12);border-radius:20px;width:min(720px,94vw);max-height:85vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.7);animation:modalIn .25s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-hdr{padding:20px 24px 16px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07)}
+.modal-close{width:30px;height:30px;border:none;background:rgba(255,255,255,.08);border-radius:8px;color:#94a3b8;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.modal-close:hover{background:rgba(239,68,68,.2);color:#f87171}
+.modal-body{padding:20px 24px 24px}
+.modal-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;margin-bottom:18px}
+.mf{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 14px}
+.mf-label{font-size:.58rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.mf-val{font-size:.85rem;font-weight:600;color:#e2e8f0}
+.modal-sf-link{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,#0070d2,#1b96ff);color:#fff;text-decoration:none;border-radius:10px;padding:10px 20px;font-size:.8rem;font-weight:700;transition:all .2s;margin-top:4px}
+.modal-sf-link:hover{box-shadow:0 4px 20px rgba(0,112,210,.5);transform:translateY(-1px)}
+
+/* ── SEV1 Case List table ── */
+.case-list-table{width:100%;border-collapse:collapse;font-size:.74rem}
+.case-list-table thead th{padding:9px 10px;text-align:left;font-weight:700;font-size:.6rem;color:#475569;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.07);white-space:nowrap}
+.case-list-table tbody tr{border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;cursor:pointer}
+.case-list-table tbody tr:hover{background:rgba(244,63,94,.08)}
+.case-list-table tbody td{padding:9px 10px;vertical-align:middle}
+.case-num-link{color:#60a5fa;font-weight:700;text-decoration:none;font-family:'SF Mono','Fira Code',monospace;font-size:.78rem;transition:color .15s}
+.case-num-link:hover{color:#93c5fd;text-decoration:underline}
+.status-pill{display:inline-block;padding:2px 9px;border-radius:10px;font-size:.6rem;font-weight:700;white-space:nowrap}
+.esc-badge{display:inline-block;padding:1px 6px;border-radius:6px;font-size:.55rem;font-weight:800;background:rgba(239,68,68,.2);color:#f87171;border:1px solid rgba(239,68,68,.3);margin-left:4px;vertical-align:middle}
+
 /* ── SEV1 Tab styles ── */
 .tab-btn.active .tdot-sev1{background:#f43f5e;box-shadow:0 0 8px #f43f5e}
 .sev1-critical-badge{font-size:.56rem;font-weight:800;background:linear-gradient(135deg,rgba(244,63,94,.35),rgba(220,38,38,.2));color:#fca5a5;border:1px solid rgba(244,63,94,.45);border-radius:10px;padding:2px 8px;letter-spacing:.06em;animation:pulse-red 2s ease-in-out infinite}
@@ -429,6 +456,41 @@ footer{position:relative;z-index:1;text-align:center;padding:20px;font-size:.67r
       </div>
     </div>
 
+    <!-- SEV1 Case List -->
+    <div class="glass" style="margin-top:20px">
+      <div class="card-hdr" style="flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="card-title">&#128203; SEV1 Case Details — Click any row to view</div>
+          <div class="card-sub" id="s1-sub-caselist">All SEV1 cases in selected range · click a case number to open in CS Org</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input id="s1-case-search" type="text" placeholder="Search case # or account…" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;font-size:.75rem;color:#e2e8f0;outline:none;width:220px" oninput="filterCaseList()"/>
+          <select id="s1-case-cloud" onchange="filterCaseList()" style="background:rgba(15,23,41,.9);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;font-size:.72rem;color:#94a3b8;outline:none;cursor:pointer">
+            <option value="all">All Clouds</option>
+            <option value="mfg">Manufacturing</option>
+            <option value="auto">Automotive</option>
+          </select>
+        </div>
+      </div>
+      <div style="padding:12px 20px 20px;overflow-x:auto">
+        <table class="case-list-table">
+          <thead>
+            <tr>
+              <th>Case #</th>
+              <th>Account</th>
+              <th>Cloud</th>
+              <th>Issue / Topic</th>
+              <th>Status</th>
+              <th>Success Plan</th>
+              <th>Opened</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="s1-tbl-cases"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- SOQL Reference -->
     <div class="soql-block">
       <div class="soql-title">&#128196; SOQL Query Reference — SEV1 Cases</div>
@@ -444,6 +506,36 @@ WHERE RecordType.Name = 'Support'
 ORDER BY CreatedDate DESC</div>
     </div>
 
+  </div>
+</div>
+
+<!-- ══ CASE DETAIL MODAL ══ -->
+<div class="modal-overlay" id="case-modal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div>
+        <div style="font-size:.7rem;font-weight:700;color:#f87171;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">&#128308; SEV1 — Level 1 Critical</div>
+        <div id="modal-casenumber" style="font-size:1.3rem;font-weight:800;color:#e2e8f0;font-family:'SF Mono','Fira Code',monospace"></div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('case-modal').classList.remove('open')">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field-grid">
+        <div class="mf"><div class="mf-label">Account</div><div class="mf-val" id="modal-account"></div></div>
+        <div class="mf"><div class="mf-label">Product &amp; Topic</div><div class="mf-val" id="modal-product"></div></div>
+        <div class="mf"><div class="mf-label">Issue / Topic</div><div class="mf-val" id="modal-topic"></div></div>
+        <div class="mf"><div class="mf-label">Status</div><div class="mf-val" id="modal-status"></div></div>
+        <div class="mf"><div class="mf-label">Success Plan</div><div class="mf-val" id="modal-sp"></div></div>
+        <div class="mf"><div class="mf-label">Severity</div><div class="mf-val" style="color:#f87171" id="modal-sev"></div></div>
+        <div class="mf"><div class="mf-label">Date Opened</div><div class="mf-val" id="modal-opened"></div></div>
+        <div class="mf"><div class="mf-label">Escalated</div><div class="mf-val" id="modal-esc"></div></div>
+      </div>
+      <a id="modal-sflink" href="#" target="_blank" rel="noopener" class="modal-sf-link">
+        <svg width="16" height="16" viewBox="0 0 36 36" fill="none"><path d="M18 7C12 7 7 12 7 18s5 11 11 11 11-5 11-11S24 7 18 7zm0 4a3 3 0 110 6 3 3 0 010-6zm0 15.2c-3.7 0-7-1.9-9-4.8.04-3 6-4.65 9-4.65s8.96 1.65 9 4.65c-2 2.9-5.3 4.8-9 4.8z" fill="white"/></svg>
+        Open in CS Org (Salesforce)
+      </a>
+      <div style="font-size:.62rem;color:#475569;margin-top:10px">&#9432; Link opens the real case in CS Org — you must be logged in to Salesforce to view it.</div>
+    </div>
   </div>
 </div>
 
@@ -474,9 +566,12 @@ const REAL_MFG_COUNTS={
 function generateData(){
   const rng=seededRng(42);
   const now=luxon.DateTime.now();
+  let caseSeq=5200000+Math.floor(rng()*99999);
   function mk(id,prod,accts,cats,feats,openMs){
     const status=STATUSES[Math.floor(rng()*STATUSES.length)];
-    return{id,productAndTopic:prod,account:accts[Math.floor(rng()*accts.length)],openMs,status,severity:SEVS[Math.floor(rng()*SEVS.length)],successPlan:SPS[Math.floor(rng()*SPS.length)],isEscalated:rng()<0.09,topic:cats[Math.floor(rng()*cats.length)]};
+    const num=String(caseSeq++).padStart(8,'0');
+    const sfId='500'+Math.random().toString(36).slice(2,17).toUpperCase().padEnd(15,'0').slice(0,15);
+    return{id,caseNumber:num,sfId,productAndTopic:prod,account:accts[Math.floor(rng()*accts.length)],openMs,status,severity:SEVS[Math.floor(rng()*SEVS.length)],successPlan:SPS[Math.floor(rng()*SPS.length)],isEscalated:rng()<0.09,topic:cats[Math.floor(rng()*cats.length)]};
   }
   const MONTHS=18; let mi=0,ai=0;
   for(let m=0;m<MONTHS;m++){
@@ -836,7 +931,80 @@ function renderSev1Tab(){
   }
   renderIssueChart('s1-chart-mfg-issues',mfg,'#0070d2');
   renderIssueChart('s1-chart-auto-issues',auto,'#7c3aed');
+
+  /* ── SEV1 Case List ── */
+  window._sev1Cases=all.slice().sort((a,b)=>b.openMs-a.openMs);
+  el('s1-sub-caselist').textContent=all.length+' SEV1 cases in period · '+range.label+' · click a row to view details · click case # to open in CS Org';
+  renderCaseList(window._sev1Cases);
 }
+
+/* ─── Status colour helper ─── */
+function statusColor(s){
+  if(['Closed','Solution Provided'].includes(s)) return{bg:'rgba(52,211,153,.12)',color:'#34d399'};
+  if(s==='Need More Information') return{bg:'rgba(251,191,36,.12)',color:'#fbbf24'};
+  if(s==='Working') return{bg:'rgba(96,165,250,.12)',color:'#60a5fa'};
+  return{bg:'rgba(148,163,184,.1)',color:'#94a3b8'};
+}
+
+/* ─── Render case rows ─── */
+function renderCaseList(cases){
+  const CS_ORG='https://cs999.salesforce.com'; // Replace with your actual CS Org URL
+  const tbody=document.getElementById('s1-tbl-cases');
+  if(!cases||!cases.length){
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#475569;padding:24px">No SEV1 cases in selected range</td></tr>';
+    return;
+  }
+  tbody.innerHTML=cases.map(c=>{
+    const sc=statusColor(c.status);
+    const cloud=c.productAndTopic==='Industry-Manufacturing Cloud'?'<span style="color:#60a5fa;font-weight:700;font-size:.65rem">Mfg</span>':'<span style="color:#a78bfa;font-weight:700;font-size:.65rem">Auto</span>';
+    const opened=luxon.DateTime.fromMillis(c.openMs).toFormat('MMM d, yyyy');
+    const escBadge=c.isEscalated?'<span class="esc-badge">ESC</span>':'';
+    const sfUrl=CS_ORG+'/'+c.sfId;
+    return`<tr onclick="openCaseModal('${c.caseNumber}')">
+      <td><a class="case-num-link" href="${sfUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open in CS Org">${c.caseNumber}</a></td>
+      <td style="color:#e2e8f0;font-weight:600;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${c.account}">${c.account}</td>
+      <td>${cloud}</td>
+      <td style="color:#94a3b8;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${c.topic}">${c.topic.length>26?c.topic.slice(0,24)+'…':c.topic}</td>
+      <td><span class="status-pill" style="background:${sc.bg};color:${sc.color}">${c.status}</span></td>
+      <td style="color:#64748b;font-size:.72rem">${c.successPlan}</td>
+      <td style="color:#64748b;font-size:.72rem;white-space:nowrap">${opened}</td>
+      <td><button onclick="event.stopPropagation();openCaseModal('${c.caseNumber}')" style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.25);color:#f87171;border-radius:7px;padding:4px 10px;font-size:.62rem;font-weight:700;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(244,63,94,.25)'" onmouseout="this.style.background='rgba(244,63,94,.1)'">Details</button>${escBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ─── Search / cloud filter ─── */
+function filterCaseList(){
+  if(!window._sev1Cases) return;
+  const q=(document.getElementById('s1-case-search').value||'').toLowerCase();
+  const cloud=document.getElementById('s1-case-cloud').value;
+  let filtered=window._sev1Cases;
+  if(cloud==='mfg') filtered=filtered.filter(c=>c.productAndTopic==='Industry-Manufacturing Cloud');
+  if(cloud==='auto') filtered=filtered.filter(c=>c.productAndTopic==='Industry-Automotive Cloud');
+  if(q) filtered=filtered.filter(c=>c.caseNumber.includes(q)||c.account.toLowerCase().includes(q)||c.topic.toLowerCase().includes(q));
+  renderCaseList(filtered);
+}
+
+/* ─── Open modal ─── */
+function openCaseModal(caseNumber){
+  const c=(window._sev1Cases||[]).find(x=>x.caseNumber===caseNumber);
+  if(!c) return;
+  const CS_ORG='https://cs999.salesforce.com';
+  document.getElementById('modal-casenumber').textContent='Case #'+c.caseNumber;
+  document.getElementById('modal-account').textContent=c.account;
+  document.getElementById('modal-product').textContent=c.productAndTopic;
+  document.getElementById('modal-topic').textContent=c.topic;
+  document.getElementById('modal-status').textContent=c.status;
+  document.getElementById('modal-sp').textContent=c.successPlan;
+  document.getElementById('modal-sev').textContent=c.severity;
+  document.getElementById('modal-opened').textContent=luxon.DateTime.fromMillis(c.openMs).toFormat('MMMM d, yyyy · h:mm a');
+  document.getElementById('modal-esc').textContent=c.isEscalated?'Yes — Escalated':'No';
+  document.getElementById('modal-esc').style.color=c.isEscalated?'#f87171':'#34d399';
+  document.getElementById('modal-sflink').href=CS_ORG+'/'+c.sfId;
+  document.getElementById('case-modal').classList.add('open');
+}
+function closeModal(e){if(e.target===document.getElementById('case-modal')) document.getElementById('case-modal').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape') document.getElementById('case-modal').classList.remove('open');});
 
 function runFilters(){
   renderVolumeTrend();
